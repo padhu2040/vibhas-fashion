@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indian GI Textiles & Fabrics Archive</title>
+    <style>
+        :root {
+            --bg-color: #f7f9fc;
+            --text-main: #1a202c;
+            --text-muted: #718096;
+            --card-bg: #ffffff;
+            --accent: #2b6cb0;
+            --border-light: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 2rem;
+        }
+
+        header {
+            max-width: 1200px;
+            margin: 0 auto 3rem auto;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 1rem;
+            letter-spacing: -0.5px;
+        }
+
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            font-size: 1rem;
+            border: 1px solid var(--border-light);
+            border-radius: 50px;
+            outline: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(43, 108, 176, 0.1);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-state {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .card-synopsis {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal {
+            background: var(--card-bg);
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            border-radius: 12px;
+            overflow-y: auto;
+            padding: 2.5rem;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+
+        .modal-title {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .schema-grid {
+            margin-top: 2rem;
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .schema-item h4 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-light);
+            padding-bottom: 0.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .schema-item p {
+            font-size: 0.95rem;
+        }
+
+        .long-form {
+            margin-top: 2.5rem;
+            padding-top: 2rem;
+            border-top: 1px dashed var(--border-light);
+            font-size: 1rem;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Indian GI Textiles Archive</h1>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search fabrics, states, or techniques...">
+        </div>
+    </header>
+
+    <div class="grid" id="fabricGrid">
+        <!-- Cards injected via JS -->
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal" id="modalContent">
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        // Inline Database (Populated from our Python extractions)
+        const fabricData = [
+            {
+                name: "Bhagalpur Silk",
+                state: "Bihar",
+                synopsis: "Bhagalpur Silk is a premier Tussar silk handloom product from Bihar. Woven by traditional artisan communities, the fabric is celebrated for its natural, golden-brown luster. Its true uniqueness lies in the highly specialized post-loom finishing utilizing local river water.",
+                schema: {
+                    "Nomenclature": "Tassar Silk, Kosa",
+                    "Geography": "Bhagalpur, Bihar (Villages: Puraini, Mirjanhat, Nathnagar)",
+                    "Community": "Woven by traditional handloom bunker sanghs, including Ansari Silk Weavers.",
+                    "Materials": "Tussar (Kosa) silk yarn.",
+                    "Loom Mechanics": "Traditional handlooms. Standard pit and frame weaving.",
+                    "Post-Loom Quality": "Renowned for its post-loom calendering. Artisans from other states prefer sending their Tussar to Bhagalpur because the local water yields a superior finish."
+                },
+                longForm: "Bhagalpur, historically known as the 'Silk City' of India, is the epicentre of Tussar silk weaving in Bihar. While the weaving itself requires immense skill, the true secret of Bhagalpur Silk lies in its post-loom finishing. The geographical environment plays a surprisingly direct role; the water used during the washing and calendering processes in Bhagalpur imparts a unique, superior finish to the silk that cannot be replicated elsewhere."
+            },
+            {
+                name: "Kutch Embroidery",
+                state: "Gujarat",
+                synopsis: "A vibrant, deeply cultural textile art passed down through centuries from mother to daughter in Gujarat. It encompasses a diverse range of styles (Aari, Rabari, Soof) that serve as identity markers for specific nomadic and pastoral communities.",
+                schema: {
+                    "Nomenclature": "Aari, Soof, Kharek, Rabari, Pakko",
+                    "Geography": "Kutch, Gujarat",
+                    "Community": "Passed down over centuries from mother to daughter. Each community expresses its own identity through specific aesthetics.",
+                    "Loom Mechanics": "Embroidery frame or hoop used for fabric tension. Needle inserted and returned in one fluid movement.",
+                    "Visual Motifs": "Peacocks, parrots, temples, camels, elephants, human figures in dancing poses."
+                },
+                longForm: "In the arid landscapes of Kutch, Gujarat, embroidery is not merely a decorative craft; it is a profound expression of social identity, migration history, and cultural evolution. Passed down meticulously over centuries, each style comprises a specific combination of stitch, motif, pattern, and color, governed by an uncompromising set of unwritten rules."
+            },
+            {
+                name: "Bagh Prints",
+                state: "Madhya Pradesh",
+                synopsis: "Celebrated for their meticulous hand-block printing, traditionally practiced by the Khatri community. The process is physically demanding, involving Khara Karna (river washing) and Mengni Karna (overnight soaking in rock salt and natural pastes).",
+                schema: {
+                    "Nomenclature": "Bagh Hand Block Prints",
+                    "Geography": "Bagh, Madhya Pradesh",
+                    "Pre-Loom Chemistry": "Khara Karna: Cloth is washed in the river and beaten on stones. Mengni Karna: Overnight soaking in rock salt, goat dung, and castor oil.",
+                    "Materials": "Cotton Mulmul, Cambric, occasionally Maheshwari silk.",
+                    "Visual Motifs": "Bold wooden block designs embossed onto the fabric."
+                },
+                longForm: "The Bagh printing tradition is a masterclass in natural textile chemistry. Before a single block touches the fabric, the cloth undergoes rigorous preparation. Up to 100 single sheets are washed at once and beaten on riverside stones to completely remove industrial starch. The designs are then stamped using intricately carved wooden blocks, fixing natural dyes like pomegranate and iron sulphate."
+            },
+            {
+                name: "Pochampally Ikat",
+                state: "Telangana",
+                synopsis: "A distinguished handloom tradition renowned for its complex resist-dyeing technique. Artisans masterfully execute single, double, and combined Ikat on both cotton and silk yarns, mathematically mapping patterns before they hit the loom.",
+                schema: {
+                    "Nomenclature": "Single Ikat, Double Ikat, Combined Ikat, Bandha",
+                    "Geography": "Pochampally, Telangana",
+                    "Pre-Loom Chemistry": "Vat and Naphthol dyes for cotton; Acid and Metal Complex dyes for silk.",
+                    "Loom Mechanics": "Single, Double, and Combined Ikat tying and dyeing techniques. Precision alignment required during weaving.",
+                    "Materials": "Fine cotton counts (2/120s, 2/100s) and Chinese organzine silk."
+                },
+                longForm: "Unlike fabrics where designs are printed or woven into a solid-colored warp, Pochampally relies on the complex resist-dyeing of the yarn before it ever reaches the loom—a process demanding extraordinary foresight and calculation. Pochampally is unique in its mastery of all three Ikat forms, ensuring exact geometric precision on traditional handlooms."
+            }
+        ];
+
+        const grid = document.getElementById('fabricGrid');
+        const searchInput = document.getElementById('searchInput');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalBody = document.getElementById('modalBody');
+
+        function renderCards(data) {
+            grid.innerHTML = '';
+            data.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.onclick = () => openModal(item);
+                card.innerHTML = `
+                    <div class="card-state">${item.state}</div>
+                    <div class="card-title">${item.name}</div>
+                    <div class="card-synopsis">${item.synopsis}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function openModal(item) {
+            let schemaHtml = '';
+            for (const [key, value] of Object.entries(item.schema)) {
+                schemaHtml += `
+                    <div class="schema-item">
+                        <h4>${key}</h4>
+                        <p>${value}</p>
+                    </div>
+                `;
+            }
+
+            modalBody.innerHTML = `
+                <div class="card-state" style="margin-bottom: 1rem;">${item.state}</div>
+                <h2 class="modal-title">${item.name}</h2>
+                <p style="font-size: 1.1rem; color: #4a5568; margin-bottom: 2rem;">${item.synopsis}</p>
+                
+                <h3 style="margin-bottom: 1rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem;">Database Schema Extraction</h3>
+                <div class="schema-grid">
+                    ${schemaHtml}
+                </div>
+
+                <div class="long-form">
+                    <h3 style="margin-bottom: 1rem;">Archival Narrative</h3>
+                    <p>${item.longForm}</p>
+                </div>
+            `;
+            modalOverlay.style.display = 'flex';
+        }
+
+        function closeModal() {
+            modalOverlay.style.display = 'none';
+        }
+
+        // Close modal when clicking outside the box
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) closeModal();
+        });
+
+        // Search Filter Engine
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = fabricData.filter(item => 
+                item.name.toLowerCase().includes(term) || 
+                item.state.toLowerCase().includes(term) ||
+                item.synopsis.toLowerCase().includes(term)
+            );
+            renderCards(filtered);
+        });
+
+        // Initial Render
+        renderCards(fabricData);
+    </script>
+</body>
+</html>
