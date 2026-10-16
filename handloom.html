@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indian GI Textile & Fabric Database</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        
+        /* Custom Scrollbar for a premium feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        /* Modal Animation */
+        .modal-enter {
+            opacity: 0;
+            transform: scale(0.95) translateY(10px);
+            transition: all 0.3s ease-out;
+        }
+        .modal-enter-active {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+        
+        .modal-overlay {
+            backdrop-filter: blur(4px);
+            transition: opacity 0.3s ease-out;
+        }
+        
+        /* Hide scrollbar when modal is open */
+        body.modal-open {
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Header & Search -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 px-6 py-5 shadow-sm">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Indian GI Textiles</h1>
+                <p class="text-sm text-slate-500 mt-1">Archival Database & Research Repository</p>
+            </div>
+            <div class="w-full md:w-96 relative">
+                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="Search fabrics, states, or techniques..." 
+                    class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                >
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content: Grid -->
+    <main class="flex-grow max-w-7xl mx-auto px-6 py-10 w-full">
+        <div id="fabricGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Cards will be injected here via JavaScript -->
+        </div>
+        
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden text-center py-20">
+            <svg class="mx-auto h-12 w-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+            </svg>
+            <h3 class="mt-2 text-sm font-semibold text-slate-900">No textiles found</h3>
+            <p class="mt-1 text-sm text-slate-500">Try adjusting your search terms.</p>
+        </div>
+    </main>
+
+    <!-- Modal Overlay -->
+    <div id="modalOverlay" class="fixed inset-0 z-40 bg-slate-900/40 modal-overlay opacity-0 pointer-events-none transition-opacity" aria-hidden="true"></div>
+
+    <!-- Modal Container -->
+    <div id="fabricModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 opacity-0 pointer-events-none modal-enter" role="dialog" aria-modal="true">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden relative">
+            
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-start sticky top-0 bg-white/95 backdrop-blur z-10">
+                <div>
+                    <span id="modalState" class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 mb-2"></span>
+                    <h2 id="modalTitle" class="text-2xl font-bold text-slate-900"></h2>
+                </div>
+                <button id="closeModalBtn" class="text-slate-400 hover:text-slate-600 transition-colors p-2 -mr-2 rounded-full hover:bg-slate-100 focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- Modal Body (Scrollable) -->
+            <div class="p-6 overflow-y-auto custom-scrollbar">
+                
+                <!-- Core Database Schema -->
+                <section class="mb-8">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 border-b border-slate-100 pb-2">1. Core Database Schema</h3>
+                    <div id="modalSchema" class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl text-sm border border-slate-100">
+                        <!-- Populated by JS -->
+                    </div>
+                </section>
+
+                <!-- Short Synopsis -->
+                <section class="mb-8">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 border-b border-slate-100 pb-2">2. Short Synopsis</h3>
+                    <p id="modalSynopsis" class="text-slate-700 leading-relaxed"></p>
+                </section>
+
+                <!-- Long-Form Narrative -->
+                <section>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 border-b border-slate-100 pb-2">3. Long-Form Narrative</h3>
+                    <div id="modalNarrative" class="text-slate-700 leading-relaxed space-y-4">
+                        <!-- Populated by JS -->
+                    </div>
+                </section>
+                
+            </div>
+        </div>
+    </div>
+
+    <!-- Data and Interaction Script -->
+    <script>
+        // Database
+        const fabricsData = [
+            {
+                id: 1,
+                name: "Bhagalpur Silk",
+                state: "Bihar",
+                category: "Silk Weaving",
+                schema: {
+                    "Material": "Tussar (Kosa) Silk",
+                    "Visual Hallmark": "Golden-brown natural hue",
+                    "Geographic Advantage": "Local water properties used in washing",
+                    "Key Technique": "Post-loom calendering"
+                },
+                synopsis: "Bhagalpur Silk, often referred to as the 'Silk City' weave, is a premier Tussar (Kosa) silk handloom product from Bihar. Woven predominantly by traditional artisan communities, the fabric is celebrated for its natural, golden-brown luster and rich texture. Bhagalpur's supremacy in the silk trade is uniquely tied to its highly specialized post-loom finishing, which utilizes the specific properties of the region's water.",
+                narrative: `
+                    <p><strong>The Golden Threads of Bihar:</strong> Bhagalpur, historically known as the "Silk City" of India, is the epicentre of Tussar silk weaving in Bihar. The handloom traditions here are sustained by deeply entrenched weaver communities who have passed down the tactile knowledge of silk handling for generations.</p>
+                    <p><strong>The Magic of Bhagalpur Processing:</strong> While the weaving itself requires immense skill, the true secret of Bhagalpur Silk lies in its post-loom finishing. The geographical environment plays a surprisingly direct role in the fabric's final quality. Artisans and stakeholders universally acknowledge that the water used during the washing and calendering processes in Bhagalpur imparts a unique, superior finish to the silk.</p>
+                    <p>This processing is so highly regarded that weavers from entirely different states frequently outsource their raw woven fabrics to Bhagalpur just to utilize the local water and finishing technology, cementing its status as a vital economic and cultural pillar of Eastern India.</p>
+                `
+            },
+            {
+                id: 2,
+                name: "Pochampally Ikat",
+                state: "Telangana",
+                category: "Resist-Dyeing",
+                schema: {
+                    "Material": "Cotton and Silk",
+                    "Dyes (Cotton)": "Vat & Naphthol",
+                    "Dyes (Silk)": "Acid & Metal Complex",
+                    "Key Technique": "Bandha (Single & Double Ikat)"
+                },
+                synopsis: "Pochampally Ikat is a distinguished handloom tradition from Telangana, renowned for its complex resist-dyeing technique locally known as Bandha. Artisans masterfully execute single, double, and combined Ikat on both cotton and silk yarns, yielding fabrics distinctive for their geometric precision and vibrant, wash-fast colors.",
+                narrative: `
+                    <p><strong>The Geometry of Color:</strong> The Pochampally Ikat tradition represents one of India's most mathematically precise textile arts. Unlike fabrics where designs are printed or woven into a solid-colored warp, Pochampally relies on the complex resist-dyeing of the yarn before it ever reaches the loom—a process demanding extraordinary foresight and calculation.</p>
+                    <p><strong>Material Science and Color Application:</strong> The coloration of these yarns is a highly specific science. Weavers utilize Vat and Naphthol dyes to achieve vibrant, wash-fast colors on cotton. Conversely, when treating delicate silks, they shift to Acid and Metal Complex dyes to ensure brilliant color penetration without damaging the fibers.</p>
+                    <p><strong>The Weaving Mechanics of Bandha:</strong> Artisans bundle and tightly tie the yarn, dyeing it in stages to create pre-determined patterns. Once transferred to the handloom, the weaver's task is to align these dyed sections flawlessly, creating precise geometric motifs that have successfully transitioned from traditional sarees into contemporary fashion.</p>
+                `
+            },
+            {
+                id: 3,
+                name: "Bagru Hand Block Print",
+                state: "Rajasthan",
+                category: "Block Printing",
+                schema: {
+                    "Resist Paste": "Dhabu (mud, lime, wheat)",
+                    "Dyes": "Natural alizarin and alum",
+                    "Washing": "Bichalna (River-washing)",
+                    "Bleaching": "Tapai (Sun-bleaching with cow dung)"
+                },
+                synopsis: "Bagru Hand Block Print is a masterclass in natural textile chemistry originating from Rajasthan. The process is physically demanding, utilizing a highly guarded resist paste called 'Dhabu'. The crisp aesthetics of Bagru prints are achieved through rigorous 'bichalna' river-washing and 'tapai', a natural sun-bleaching process.",
+                narrative: `
+                    <p><strong>The Chemistry of Bagru:</strong> Bagru Hand Block Print relies on a complex, multi-stage treatment and printing of woven fabrics. Artisans use 'Dhabu', a highly guarded resist paste made from clay, lime, and insect-eaten wheat, which is stamped onto the fabric and coated in sawdust to block out subsequent dyes.</p>
+                    <p><strong>Bichalna River Washing:</strong> The vibrancy of these traditional prints relies heavily on 'bichalna'—a physically grueling river-washing process. Bundles of fabric are forcefully submerged in running river water and beaten against stones to violently expel any superfluous dye and residue.</p>
+                    <p><strong>Tapai Sun-Bleaching:</strong> Crucially, the crisp white backgrounds of Bagru prints are achieved through 'Tapai'. The fabric is laid on a riverbed and a mild solution of cow dung and water is sprinkled over it while drying in the intense sun, acting as a natural bleach and fixing agent.</p>
+                `
+            },
+            {
+                id: 4,
+                name: "Kutch Embroidery",
+                state: "Gujarat",
+                category: "Needlework",
+                schema: {
+                    "Material": "Floss silk & cotton threads",
+                    "Components": "Thread, Mirrors, Sequins",
+                    "Styles": "Aari, Rabari, Soof",
+                    "Cultural Role": "Nomadic identity marker"
+                },
+                synopsis: "Kutch Embroidery from Gujarat is a vibrant, deeply cultural textile art passed down through centuries from mother to daughter. It encompasses a diverse range of styles—such as Aari, Rabari, and Soof—each serving as a distinct identity marker for specific nomadic and pastoral communities, reflecting their migration histories.",
+                narrative: `
+                    <p><strong>The Threads of Identity:</strong> In the arid landscapes of Kutch, Gujarat, embroidery is not merely a decorative craft; it is a profound expression of social identity, migration history, and cultural evolution. A community's specific aesthetic preference immediately identifies the wearer's lineage and social standing.</p>
+                    <p><strong>The Nomenclature of Stitches:</strong> Kutch embroidery is an umbrella term for a vast vocabulary of highly specialized styles, including Aari, Soof, and Rabari. Each style comprises a specific combination of stitch, motif, pattern, and color, governed by an uncompromising set of unwritten rules.</p>
+                    <p><strong>Materials and Motifs:</strong> Women use floss silk and cotton threads to embroider intricate motifs of dancing peacocks, camels, temples, and daily life onto base fabrics. The craft heavily incorporates mirrors and sequins, executed using specialized needles, bridging diverse cultures through the needle.</p>
+                `
+            },
+            {
+                id: 5,
+                name: "Baluchari Saree",
+                state: "West Bengal",
+                category: "Silk Weaving",
+                schema: {
+                    "Design Tool": "Drafted on graph paper",
+                    "Structural Detail": "3-plied picks",
+                    "Loom": "Jacquard handloom",
+                    "Labour": "Master weaver + assistant (shifts)"
+                },
+                synopsis: "The Baluchari Saree is an exquisite weaving tradition currently flourishing in West Bengal. Renowned for its intricate motif making, designs are meticulously drafted onto graph paper before being executed on jacquard looms. The weaving is so complex that a single loom often requires two weavers working in tandem.",
+                narrative: `
+                    <p><strong>The Art of Motif Making:</strong> The Baluchari Saree is celebrated for its highly detailed, narrative motifs often depicting mythological scenes. The design engineering is an intricate process where the specimen design is carefully drawn onto graph paper before being transferred to the loom's mechanical punch cards.</p>
+                    <p><strong>Structural Mechanics:</strong> The texture of the Baluchari is distinguished by its 3-plied picks. The weft yarn preparation is lengthy, involving three separate short hanks wound simultaneously to create a rich, raised texture on the fabric's surface.</p>
+                    <p><strong>Loom Architecture:</strong> The weaving is mechanically demanding. In traditional clusters, fly shuttle looms are equipped with heavy jacquard machines. The process is so labor-intensive that two weavers (one fully skilled master and one semi-skilled assistant) frequently work on a single loom in shifting duties to complete the elaborate pallus and borders.</p>
+                `
+            },
+            {
+                id: 6,
+                name: "Kullu Shawls",
+                state: "Himachal Pradesh",
+                category: "Wool Weaving",
+                schema: {
+                    "Material": "22-micron local wool",
+                    "Source": "Migratory Gaddie sheep",
+                    "Visual Hallmark": "Geometric floral motifs",
+                    "Structural Detail": "Identical appearance on both sides"
+                },
+                synopsis: "The Kullu Shawl is a distinguished woolen fabric originating from the high altitudes of Himachal Pradesh. The craft is intrinsically linked to local geography, utilizing wool sourced from migratory Gaddie sheep. Woven on handlooms, its defining characteristic is its geometric floral motifs that appear identical on both sides of the fabric.",
+                narrative: `
+                    <p><strong>High Altitude Wool:</strong> The Kullu Shawl tradition is heavily dependent on the local ecosystem. The raw material is acquired from migratory sheep (Gaddies) bred in the higher hills during summer and brought back to the villages in winter. Strict specifications dictate the use of fine 22-micron wool with a specific fiber length.</p>
+                    <p><strong>Reversible Weaving Mechanics:</strong> Woven on traditional handlooms, the shawl is renowned for its technical density and structural ingenuity. Value addition is achieved by manually inserting dyed design threads width-wise during the weaving process.</p>
+                    <p><strong>Visual Morphology:</strong> This painstaking, manual thread-insertion technique is designed specifically so that the intricate geometric and floral motifs appear perfectly identical on both the face and the reverse of the fabric, a hallmark of authentic Kullu craftsmanship.</p>
+                `
+            },
+            {
+                id: 7,
+                name: "Moirang Phee",
+                state: "Manipur",
+                category: "Cotton/Silk Weaving",
+                schema: {
+                    "Visual Hallmark": "Moirang Pheejin (temple motif)",
+                    "Loom": "Throw/Fly shuttle loom",
+                    "Technique": "Extra-weft border",
+                    "Symbolism": "Teeth of Pakhangba (dragon god)"
+                },
+                synopsis: "Moirang Phee is a culturally revered handloom textile from Manipur, instantly recognizable by its distinct Moirang Pheejin border. Woven predominantly on traditional throw or fly shuttle looms, the fabric features a pointed, half-diamond temple motif running along the edges, deeply embedded in Manipuri anthropology and ceremonies.",
+                narrative: `
+                    <p><strong>The Sacred Border:</strong> Moirang Phee is defined by its 'Moirang Pheejin'—a pointed, serrated, half-diamond temple motif woven longitudinally along the fabric's borders. This motif is created utilizing a specialized extra-weft technique on traditional throw or fly shuttle looms.</p>
+                    <p><strong>Mythological Inspiration:</strong> The design vocabulary is highly symbolic. The serrated edges are believed to represent the teeth of the Pakhangba, the mythical dragon god of Manipur, or alternately, the pointed tips of traditional warrior spears.</p>
+                    <p><strong>Socio-Religious Value:</strong> The textile is an indispensable part of local anthropology. It holds immense ceremonial value, worn during religious festivals and frequently given as a customary gift (Khudolmat) during marriages and other auspicious occasions, signifying respect and cultural continuity.</p>
+                `
+            }
+        ];
+
+        // Elements
+        const gridEl = document.getElementById('fabricGrid');
+        const searchInput = document.getElementById('searchInput');
+        const emptyState = document.getElementById('emptyState');
+        
+        // Modal Elements
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalContainer = document.getElementById('fabricModal');
+        const btnCloseModal = document.getElementById('closeModalBtn');
+        
+        const modalTitle = document.getElementById('modalTitle');
+        const modalState = document.getElementById('modalState');
+        const modalSchema = document.getElementById('modalSchema');
+        const modalSynopsis = document.getElementById('modalSynopsis');
+        const modalNarrative = document.getElementById('modalNarrative');
+
+        // Initial Render
+        renderGrid(fabricsData);
+
+        // Search Event Listener
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = fabricsData.filter(fabric => 
+                fabric.name.toLowerCase().includes(term) || 
+                fabric.state.toLowerCase().includes(term) ||
+                fabric.category.toLowerCase().includes(term)
+            );
+            renderGrid(filtered);
+        });
+
+        // Render Function
+        function renderGrid(data) {
+            gridEl.innerHTML = '';
+            
+            if (data.length === 0) {
+                gridEl.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            gridEl.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+
+            data.forEach(fabric => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-200 cursor-pointer overflow-hidden group flex flex-col h-full transform hover:-translate-y-1";
+                card.onclick = () => openModal(fabric);
+                
+                card.innerHTML = `
+                    <div class="h-2 w-full bg-gradient-to-r from-indigo-500 to-purple-500 opacity-75 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="p-6 flex-grow flex flex-col">
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">${fabric.state}</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-900 mb-2 leading-tight">${fabric.name}</h3>
+                        <p class="text-sm text-slate-500 line-clamp-3 mb-4 flex-grow">${fabric.synopsis}</p>
+                        <div class="mt-auto flex items-center text-sm font-medium text-indigo-600 group-hover:text-indigo-700">
+                            Read Dossier
+                            <svg class="ml-1 w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </div>
+                    </div>
+                `;
+                gridEl.appendChild(card);
+            });
+        }
+
+        // Modal Logic
+        function openModal(fabric) {
+            // Populate Data
+            modalTitle.textContent = fabric.name;
+            modalState.textContent = fabric.state + " • " + fabric.category;
+            modalSynopsis.textContent = fabric.synopsis;
+            modalNarrative.innerHTML = fabric.narrative;
+            
+            // Populate Schema
+            modalSchema.innerHTML = '';
+            for (const [key, value] of Object.entries(fabric.schema)) {
+                modalSchema.innerHTML += `
+                    <div>
+                        <dt class="text-xs text-slate-500 font-medium">${key}</dt>
+                        <dd class="text-sm font-semibold text-slate-900 mt-0.5">${value}</dd>
+                    </div>
+                `;
+            }
+
+            // Show Modal
+            document.body.classList.add('modal-open');
+            modalOverlay.classList.remove('opacity-0', 'pointer-events-none');
+            modalOverlay.classList.add('opacity-100');
+            
+            modalContainer.classList.remove('opacity-0', 'pointer-events-none');
+            modalContainer.classList.add('modal-enter-active');
+        }
+
+        function closeModal() {
+            document.body.classList.remove('modal-open');
+            
+            modalOverlay.classList.remove('opacity-100');
+            modalOverlay.classList.add('opacity-0', 'pointer-events-none');
+            
+            modalContainer.classList.remove('modal-enter-active');
+            modalContainer.classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        // Close on button click
+        btnCloseModal.addEventListener('click', closeModal);
+        
+        // Close on background click
+        modalContainer.addEventListener('click', (e) => {
+            if (e.target === modalContainer) {
+                closeModal();
+            }
+        });
+        
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.body.classList.contains('modal-open')) {
+                closeModal();
+            }
+        });
+
+    </script>
+</body>
+</html>
